@@ -153,6 +153,32 @@ function syncWithServer() {
     })
     .catch(err => console.error("Server sync failed:", err));
 }
+// ====== Fetch Quotes from Server (Simulated) ======
+function fetchQuotesFromServer() {
+  fetch("https://jsonplaceholder.typicode.com/posts")
+    .then(res => res.json())
+    .then(serverData => {
+      // Map server data to quote structure
+      const serverQuotes = serverData.map(item => ({
+        id: item.id,
+        text: item.title,
+        category: "Server"
+      }));
+
+      // Merge server quotes with local quotes (server takes precedence)
+      const mergedQuotes = [
+        ...serverQuotes,
+        ...quotes.filter(q => !serverQuotes.find(sq => sq.id === q.id))
+      ];
+
+      quotes = mergedQuotes;
+      localStorage.setItem("quotes", JSON.stringify(quotes));
+      populateCategories();
+      showRandomQuote();
+      showNotification("Quotes synced with server successfully!");
+    })
+    .catch(err => console.error("Failed to fetch server quotes:", err));
+}
 
 // ====== Show Notification ======
 function showNotification(message) {
