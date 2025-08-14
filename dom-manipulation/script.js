@@ -224,6 +224,47 @@ async function postQuoteToServer(quote) {
     console.error("Failed to post quote to server:", err);
   }
 }
+// ====== Sync Quotes with Server ======
+async function syncQuotes() {
+  try {
+    // Fetch server quotes
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+    const serverData = await response.json();
+
+    // Map server data to quote structure
+    const serverQuotes = serverData.map(item => ({
+      id: item.id,
+      text: item.title,
+      category: "Server"
+    }));
+
+    // Merge quotes: server takes precedence
+    const mergedQuotes = [
+      ...serverQuotes,
+      ...quotes.filter(q => !serverQuotes.find(sq => sq.id === q.id))
+    ];
+
+    quotes = mergedQuotes;
+    localStorage.setItem("quotes", JSON.stringify(quotes));
+    populateCategories();
+    showRandomQuote();
+    showNotification("Quotes synced with server!");
+
+    // Optionally, POST new local quotes to server
+    for (const q of quotes.filter(q => q.id > 100)) { // example condition
+      await fetch("https://jsonplaceholder.typicode.com/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ title: q.text, body: "", userId: 1 })
+      });
+    }
+
+  } catch (err) {
+    console.error("Sync failed:", err);
+  }
+}
 
 // ====== Show Notification ======
 function showNotification(message) {
