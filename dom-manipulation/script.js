@@ -5,24 +5,37 @@ let quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "It’s not whether you get knocked down, it’s whether you get up.", category: "Resilience" }
 ];
 
-// ====== Save Quotes to Local Storage ======
+// ====== Save Quotes ======
 function saveQuotes() {
   localStorage.setItem("quotes", JSON.stringify(quotes));
 }
 
-// ====== Display Random Quote ======
+// ====== Display Random Quote or Filtered Quotes ======
 function showRandomQuote() {
   const display = document.getElementById("quoteDisplay");
   if (!quotes.length) {
     display.innerHTML = "<p>No quotes available.</p>";
     return;
   }
-  const randomIndex = Math.floor(Math.random() * quotes.length);
-  const quote = quotes[randomIndex];
+
+  const selectedCategory = localStorage.getItem("lastCategory") || "all";
+  let filteredQuotes = quotes;
+
+  if (selectedCategory !== "all") {
+    filteredQuotes = quotes.filter(q => q.category === selectedCategory);
+  }
+
+  if (!filteredQuotes.length) {
+    display.innerHTML = "<p>No quotes in this category.</p>";
+    return;
+  }
+
+  const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
+  const quote = filteredQuotes[randomIndex];
   display.innerHTML = `<p>"${quote.text}"</p><small>- ${quote.category}</small>`;
 }
 
-// ====== Create Add Quote Form (hooks existing HTML elements) ======
+// ====== Create Add Quote Form ======
 function createAddQuoteForm() {
   const addBtn = document.getElementById("addQuoteBtn");
   const textInput = document.getElementById("newQuoteText");
@@ -39,6 +52,7 @@ function createAddQuoteForm() {
 
     quotes.push({ text, category });
     saveQuotes();
+    populateCategories(); // update categories dropdown
 
     textInput.value = "";
     categoryInput.value = "";
@@ -46,6 +60,37 @@ function createAddQuoteForm() {
     alert("Quote added successfully!");
     showRandomQuote();
   });
+}
+
+// ====== Populate Categories Dropdown ======
+function populateCategories() {
+  const select = document.getElementById("categoryFilter");
+  const selected = select.value || "all";
+
+  // Get unique categories
+  const categories = Array.from(new Set(quotes.map(q => q.category)));
+
+  // Clear current options except "All Categories"
+  select.innerHTML = '<option value="all">All Categories</option>';
+
+  categories.forEach(cat => {
+    const option = document.createElement("option");
+    option.value = cat;
+    option.textContent = cat;
+    select.appendChild(option);
+  });
+
+  // Restore last selected category
+  const lastCategory = localStorage.getItem("lastCategory") || "all";
+  select.value = lastCategory;
+}
+
+// ====== Filter Quotes by Category ======
+function filterQuotes() {
+  const select = document.getElementById("categoryFilter");
+  const selected = select.value;
+  localStorage.setItem("lastCategory", selected); // save last selected filter
+  showRandomQuote();
 }
 
 // ====== Export Quotes to JSON ======
@@ -70,6 +115,7 @@ function importFromJsonFile(event) {
       if (Array.isArray(importedQuotes)) {
         quotes.push(...importedQuotes);
         saveQuotes();
+        populateCategories();
         alert("Quotes imported successfully!");
         showRandomQuote();
       } else {
@@ -83,21 +129,15 @@ function importFromJsonFile(event) {
   };
   fileReader.readAsText(event.target.files[0]);
 }
-window.importFromJsonFile = importFromJsonFile; // make it callable from HTML onchange
+window.importFromJsonFile = importFromJsonFile;
 
 // ====== Event Listeners ======
 document.addEventListener("DOMContentLoaded", () => {
-  // Initialize add quote form
   createAddQuoteForm();
+  populateCategories();
 
-  // New quote button
-  const newQuoteBtn = document.getElementById("newQuote");
-  if (newQuoteBtn) newQuoteBtn.addEventListener("click", showRandomQuote);
+  document.getElementById("newQuote").addEventListener("click", showRandomQuote);
+  document.getElementById("exportQuotes").addEventListener("click", exportQuotes);
 
-  // Export button
-  const exportBtn = document.getElementById("exportQuotes");
-  if (exportBtn) exportBtn.addEventListener("click", exportQuotes);
-
-  // Show a random quote on page load
-  showRandomQuote();
+  showRandomQuote(); // initial display
 });
