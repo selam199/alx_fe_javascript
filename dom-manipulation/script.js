@@ -5,6 +5,15 @@ let quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "The only way to do great work is to love what you do.", category: "Motivation" },
   { text: "Life is what happens when you're busy making other plans.", category: "Life" }
 ];
+function showRandomQuote() {
+  if (quotes.length === 0) {
+    quoteDisplay.innerHTML = "<p>No quotes available.</p>";
+    return;
+  }
+  const randomIndex = Math.floor(Math.random() * quotes.length);
+  const quote = quotes[randomIndex];
+  quoteDisplay.innerHTML = `<p>"${quote.text}"</p><small>- ${quote.category}</small>`;
+}
 
 // Save quotes to Local Storage
 function saveQuotes() {
@@ -76,3 +85,5 @@ document.getElementById("exportQuotes").addEventListener("click", exportQuotes);
 
 // Show a quote when the page loads
 showNewQuote();
+// ====== Initial Display ======
+showRandomQuote();
