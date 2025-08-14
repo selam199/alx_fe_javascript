@@ -179,6 +179,34 @@ function fetchQuotesFromServer() {
     })
     .catch(err => console.error("Failed to fetch server quotes:", err));
 }
+// ====== Fetch Quotes from Server (Async/Await) ======
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+    const serverData = await response.json();
+
+    // Map server data to quote structure
+    const serverQuotes = serverData.map(item => ({
+      id: item.id,
+      text: item.title,
+      category: "Server"
+    }));
+
+    // Merge server quotes with local quotes (server takes precedence)
+    const mergedQuotes = [
+      ...serverQuotes,
+      ...quotes.filter(q => !serverQuotes.find(sq => sq.id === q.id))
+    ];
+
+    quotes = mergedQuotes;
+    localStorage.setItem("quotes", JSON.stringify(quotes));
+    populateCategories();
+    showRandomQuote();
+    showNotification("Quotes synced with server successfully!");
+  } catch (err) {
+    console.error("Failed to fetch server quotes:", err);
+  }
+}
 
 // ====== Show Notification ======
 function showNotification(message) {
