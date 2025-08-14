@@ -207,6 +207,23 @@ async function fetchQuotesFromServer() {
     console.error("Failed to fetch server quotes:", err);
   }
 }
+// ====== Send New Quote to Server ======
+async function postQuoteToServer(quote) {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(quote)
+    });
+
+    const data = await response.json();
+    console.log("Quote posted to server:", data);
+  } catch (err) {
+    console.error("Failed to post quote to server:", err);
+  }
+}
 
 // ====== Show Notification ======
 function showNotification(message) {
